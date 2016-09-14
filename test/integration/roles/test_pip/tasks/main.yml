@@ -116,3 +116,45 @@
   assert:
     that:
       - "not url_installed.changed"
+
+- name: install vcs url as editable
+  pip: name="git+https://github.com/ansible/ansible#egg=ansible" virtualenv={{ output_dir }}/pipenv
+  register: vcs_editable
+
+- name: get list of editable packages
+  shell: "{{ output_dir }}/pipenv/bin/pip list --editable"
+  register: editable_packages
+
+- name: check that vcs url was installed as editable
+  assert:
+    that:
+      - "'ansible' in editable_packages.stdout"
+
+- name: remove editable vcs url package
+  pip: name="ansible" state=absent virtualenv={{ output_dir }}/pipenv
+
+- name: get list of editable packages
+  shell: "{{ output_dir }}/pipenv/bin/pip list --editable"
+  register: editable_packages
+
+- name: check that editable vcs url package was removed
+  assert:
+    that:
+      - "'ansible' not in editable_packages.stdout"
+
+- name: check out python package to test installing
+  git:
+    repo: "git://github.com/ansible/ansible.git"
+
+- name: install non-vcs path as editable
+  pip: name="ansible" virtualenv={{ output_dir }}/pipenv
+  register: project_editable
+
+- name: get list of editable packages
+  shell: "{{ output_dir }}/pipenv/bin/pip list --editable"
+  register: editable_packages
+
+- name: check that non-vcs path was installed as editable
+  assert:
+    that:
+      - "'ansible' in editable_packages.stdout"
